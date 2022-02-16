@@ -29,7 +29,7 @@ kubectl delete -f examples/basic.yaml
 
 OR
 
-kubectl delete flinkdep basic-example
+kubectl delete flinkdep {dep_name}
 ```
 
 ### Get/List Flink deployments
