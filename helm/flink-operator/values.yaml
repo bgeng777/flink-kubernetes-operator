@@ -24,7 +24,7 @@ operatorNamespace:
 image:
   repository: flink-operator
   pullPolicy: IfNotPresent
-  tag: latest
+  tag: 0.2
 
 rbac:
   create: true

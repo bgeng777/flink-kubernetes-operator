@@ -113,6 +113,8 @@ public class FlinkUtils {
                             KubernetesConfigOptions.JOB_MANAGER_CPU,
                             spec.getJobManager().getResource().getCpu());
                 }
+                effectiveConfig.setInteger(
+                        KubernetesConfigOptions.KUBERNETES_JOBMANAGER_REPLICAS, 2);
 
                 if (spec.getJobManager().getPodTemplate() != null) {
                     effectiveConfig.set(

@@ -27,7 +27,7 @@ spec:
   flinkConfiguration:
     kubernetes.jobmanager.service-account: flink-operator
   jobManager:
-    replicas: 1
+    replicas: 2
     resource:
       memory: "2048m"
       cpu: 1
