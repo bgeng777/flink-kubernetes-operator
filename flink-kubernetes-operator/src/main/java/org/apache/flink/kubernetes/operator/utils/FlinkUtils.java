@@ -18,17 +18,23 @@
 package org.apache.flink.kubernetes.operator.utils;
 
 import org.apache.flink.configuration.ConfigConstants;
+import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.CoreOptions;
 import org.apache.flink.configuration.DeploymentOptions;
 import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.configuration.JobManagerOptions;
+import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
 import org.apache.flink.kubernetes.operator.crd.FlinkDeployment;
 import org.apache.flink.kubernetes.operator.crd.spec.FlinkDeploymentSpec;
+import org.apache.flink.kubernetes.operator.crd.spec.JobManagerSpec;
+import org.apache.flink.kubernetes.operator.crd.spec.JobSpec;
+import org.apache.flink.kubernetes.operator.crd.spec.Resource;
+import org.apache.flink.kubernetes.operator.crd.spec.TaskManagerSpec;
 import org.apache.flink.util.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -44,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Iterator;
@@ -66,23 +73,22 @@ public class FlinkUtils {
                             ? GlobalConfiguration.loadConfiguration(flinkConfDir)
                             : new Configuration();
 
+            // Parse config from spec's flinkConfiguration
+            if (spec.getFlinkConfiguration() != null && !spec.getFlinkConfiguration().isEmpty()) {
+                spec.getFlinkConfiguration().forEach(effectiveConfig::setString);
+            }
+
             effectiveConfig.setString(KubernetesConfigOptions.NAMESPACE, namespace);
             effectiveConfig.setString(KubernetesConfigOptions.CLUSTER_ID, clusterId);
 
+            // Web UI
             if (spec.getIngressDomain() != null) {
                 effectiveConfig.set(
                         KubernetesConfigOptions.REST_SERVICE_EXPOSED_TYPE,
                         KubernetesConfigOptions.ServiceExposedType.ClusterIP);
             }
 
-            if (spec.getJob() != null) {
-                effectiveConfig.set(
-                        DeploymentOptions.TARGET, KubernetesDeploymentTarget.APPLICATION.getName());
-            } else {
-                effectiveConfig.set(
-                        DeploymentOptions.TARGET, KubernetesDeploymentTarget.SESSION.getName());
-            }
-
+            // Image
             if (!StringUtils.isNullOrWhitespaceOnly(spec.getImage())) {
                 effectiveConfig.set(KubernetesConfigOptions.CONTAINER_IMAGE, spec.getImage());
             }
@@ -93,80 +99,102 @@ public class FlinkUtils {
                         KubernetesConfigOptions.ImagePullPolicy.valueOf(spec.getImagePullPolicy()));
             }
 
-            if (spec.getFlinkConfiguration() != null && !spec.getFlinkConfiguration().isEmpty()) {
-                spec.getFlinkConfiguration().forEach(effectiveConfig::setString);
-            }
-
-            // Pod template
+            // Common Pod template
             if (spec.getPodTemplate() != null) {
                 effectiveConfig.set(
                         KubernetesConfigOptions.KUBERNETES_POD_TEMPLATE,
                         createTempFile(spec.getPodTemplate()));
             }
 
+            // JM
             if (spec.getJobManager() != null) {
-                if (spec.getJobManager().getResource() != null) {
-                    effectiveConfig.setString(
-                            JobManagerOptions.TOTAL_PROCESS_MEMORY.key(),
-                            spec.getJobManager().getResource().getMemory());
-                    effectiveConfig.set(
-                            KubernetesConfigOptions.JOB_MANAGER_CPU,
-                            spec.getJobManager().getResource().getCpu());
-                }
-                effectiveConfig.setInteger(
-                        KubernetesConfigOptions.KUBERNETES_JOBMANAGER_REPLICAS,
-                        spec.getJobManager().getReplicas());
-
-                if (spec.getJobManager().getPodTemplate() != null) {
-                    effectiveConfig.set(
-                            KubernetesConfigOptions.JOB_MANAGER_POD_TEMPLATE,
-                            createTempFile(
-                                    mergePodTemplates(
-                                            spec.getPodTemplate(),
-                                            spec.getJobManager().getPodTemplate())));
-                }
+                setJobManager(spec.getJobManager(), spec.getPodTemplate(), effectiveConfig);
             }
 
+            // TM
             if (spec.getTaskManager() != null) {
-                if (spec.getTaskManager().getTaskSlots() > 0) {
-                    effectiveConfig.set(
-                            TaskManagerOptions.NUM_TASK_SLOTS,
-                            spec.getTaskManager().getTaskSlots());
-                }
-
-                if (spec.getTaskManager().getResource() != null) {
-                    effectiveConfig.setString(
-                            TaskManagerOptions.TOTAL_PROCESS_MEMORY.key(),
-                            spec.getTaskManager().getResource().getMemory());
-                    effectiveConfig.set(
-                            KubernetesConfigOptions.TASK_MANAGER_CPU,
-                            spec.getTaskManager().getResource().getCpu());
-                }
-
-                if (spec.getTaskManager().getPodTemplate() != null) {
-                    effectiveConfig.set(
-                            KubernetesConfigOptions.TASK_MANAGER_POD_TEMPLATE,
-                            createTempFile(
-                                    mergePodTemplates(
-                                            spec.getPodTemplate(),
-                                            spec.getTaskManager().getPodTemplate())));
-                }
+                setTaskManager(spec.getTaskManager(), spec.getPodTemplate(), effectiveConfig);
             }
 
-            if (spec.getJob() != null) {
-                final URI uri = new URI(spec.getJob().getJarURI());
-                effectiveConfig.set(
-                        PipelineOptions.JARS, Collections.singletonList(uri.toString()));
-
-                if (spec.getJob().getParallelism() > 0) {
-                    effectiveConfig.set(
-                            CoreOptions.DEFAULT_PARALLELISM, spec.getJob().getParallelism());
-                }
-            }
+            // Job or Session cluster
+            setJobOrSessionCluster(spec.getJob(), effectiveConfig);
 
             return effectiveConfig;
         } catch (Exception e) {
             throw new RuntimeException("Failed to load configuration", e);
+        }
+    }
+
+    private static void setJobOrSessionCluster(JobSpec jobSpec, Configuration effectiveConfig)
+            throws URISyntaxException {
+        if (jobSpec != null) {
+            effectiveConfig.set(
+                    DeploymentOptions.TARGET, KubernetesDeploymentTarget.APPLICATION.getName());
+            final URI uri = new URI(jobSpec.getJarURI());
+            effectiveConfig.set(PipelineOptions.JARS, Collections.singletonList(uri.toString()));
+
+            if (jobSpec.getParallelism() > 0) {
+                effectiveConfig.set(CoreOptions.DEFAULT_PARALLELISM, jobSpec.getParallelism());
+            }
+        } else {
+            effectiveConfig.set(
+                    DeploymentOptions.TARGET, KubernetesDeploymentTarget.SESSION.getName());
+        }
+    }
+
+    private static void setJobManager(
+            JobManagerSpec jobManagerSpec, Pod commonPod, Configuration effectiveConfig)
+            throws IOException {
+        if (jobManagerSpec != null) {
+            setResource(jobManagerSpec.getResource(), effectiveConfig, true);
+            setPodTemplate(commonPod, jobManagerSpec.getPodTemplate(), effectiveConfig, true);
+            if (jobManagerSpec.getReplicas() > 0) {
+                effectiveConfig.setInteger(
+                        KubernetesConfigOptions.KUBERNETES_JOBMANAGER_REPLICAS,
+                        jobManagerSpec.getReplicas());
+            }
+        }
+    }
+
+    private static void setTaskManager(
+            TaskManagerSpec taskManagerSpec, Pod commonPod, Configuration effectiveConfig)
+            throws IOException {
+        if (taskManagerSpec != null) {
+            setResource(taskManagerSpec.getResource(), effectiveConfig, false);
+            setPodTemplate(commonPod, taskManagerSpec.getPodTemplate(), effectiveConfig, false);
+            if (taskManagerSpec.getTaskSlots() > 0) {
+                effectiveConfig.set(
+                        TaskManagerOptions.NUM_TASK_SLOTS, taskManagerSpec.getTaskSlots());
+            }
+        }
+    }
+
+    private static void setResource(
+            Resource resource, Configuration effectiveConfig, boolean isJM) {
+        if (resource != null) {
+            ConfigOption<MemorySize> memoryConfigOption =
+                    isJM
+                            ? JobManagerOptions.TOTAL_PROCESS_MEMORY
+                            : TaskManagerOptions.TOTAL_PROCESS_MEMORY;
+            ConfigOption<Double> cpuConfigOption =
+                    isJM
+                            ? KubernetesConfigOptions.JOB_MANAGER_CPU
+                            : KubernetesConfigOptions.TASK_MANAGER_CPU;
+            effectiveConfig.setString(memoryConfigOption.key(), resource.getMemory());
+            effectiveConfig.setDouble(cpuConfigOption.key(), resource.getCpu());
+        }
+    }
+
+    private static void setPodTemplate(
+            Pod basicPod, Pod appendPod, Configuration effectiveConfig, boolean isJM)
+            throws IOException {
+        if (basicPod != null) {
+            ConfigOption<String> podConfigOption =
+                    isJM
+                            ? KubernetesConfigOptions.JOB_MANAGER_POD_TEMPLATE
+                            : KubernetesConfigOptions.TASK_MANAGER_POD_TEMPLATE;
+            effectiveConfig.setString(
+                    podConfigOption, createTempFile(mergePodTemplates(basicPod, appendPod)));
         }
     }
 

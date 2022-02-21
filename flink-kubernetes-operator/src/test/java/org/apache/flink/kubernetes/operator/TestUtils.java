@@ -41,6 +41,8 @@ public class TestUtils {
     public static final String SERVICE_ACCOUNT = "flink-operator";
     public static final String FLINK_VERSION = "latest";
     public static final String IMAGE = String.format("flink:%s", FLINK_VERSION);
+    public static final String IMAGE_POLICY = "IfNotPresent";
+    public static final String SAMPLE_JAR = "local:///tmp/sample.jar";
 
     public static FlinkDeployment buildSessionCluster() {
         FlinkDeployment deployment = new FlinkDeployment();
@@ -49,17 +51,7 @@ public class TestUtils {
                         .withName("test-cluster")
                         .withNamespace(TEST_NAMESPACE)
                         .build());
-        deployment.setSpec(
-                FlinkDeploymentSpec.builder()
-                        .image(IMAGE)
-                        .flinkVersion(FLINK_VERSION)
-                        .flinkConfiguration(
-                                Collections.singletonMap(
-                                        KubernetesConfigOptions.JOB_MANAGER_SERVICE_ACCOUNT.key(),
-                                        SERVICE_ACCOUNT))
-                        .jobManager(new JobManagerSpec(new Resource(1, "2048m"), 1, null))
-                        .taskManager(new TaskManagerSpec(new Resource(1, "2048m"), 2, null))
-                        .build());
+        deployment.setSpec(getTestFlinkDeploymentSpec());
         return deployment;
     }
 
@@ -67,11 +59,7 @@ public class TestUtils {
         FlinkDeployment deployment = buildSessionCluster();
         deployment
                 .getSpec()
-                .setJob(
-                        JobSpec.builder()
-                                .jarURI("local:///tmp/sample.jar")
-                                .state(JobState.RUNNING)
-                                .build());
+                .setJob(JobSpec.builder().jarURI(SAMPLE_JAR).state(JobState.RUNNING).build());
         return deployment;
     }
 
@@ -86,5 +74,19 @@ public class TestUtils {
         } catch (JsonProcessingException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    public static FlinkDeploymentSpec getTestFlinkDeploymentSpec() {
+        return FlinkDeploymentSpec.builder()
+                .image(IMAGE)
+                .imagePullPolicy(IMAGE_POLICY)
+                .flinkVersion(FLINK_VERSION)
+                .flinkConfiguration(
+                        Collections.singletonMap(
+                                KubernetesConfigOptions.JOB_MANAGER_SERVICE_ACCOUNT.key(),
+                                SERVICE_ACCOUNT))
+                .jobManager(new JobManagerSpec(new Resource(1, "2048m"), 1, null))
+                .taskManager(new TaskManagerSpec(new Resource(1, "2048m"), 2, null))
+                .build();
     }
 }
