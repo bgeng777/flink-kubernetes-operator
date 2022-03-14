@@ -135,6 +135,16 @@ public class FlinkService {
         return false;
     }
 
+    public boolean isJobManagerServing(Configuration config) {
+        try (ClusterClient<String> clusterClient = getClusterClient(config)) {
+            clusterClient.listJobs().get(10, TimeUnit.SECONDS);
+            return true;
+        } catch (Exception ignored) {
+        }
+
+        return false;
+    }
+
     public Collection<JobStatusMessage> listJobs(Configuration conf) throws Exception {
         try (ClusterClient<String> clusterClient = getClusterClient(conf)) {
             return clusterClient.listJobs().get(10, TimeUnit.SECONDS);
