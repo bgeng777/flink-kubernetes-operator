@@ -109,13 +109,31 @@ public class FlinkDeploymentControllerTest {
         assertTrue(reconciliationStatus.isSuccess());
         assertNull(reconciliationStatus.getError());
         assertEquals(appCluster.getSpec(), reconciliationStatus.getLastReconciledSpec());
-
+        // JM state: DEPLOYING -> DEPLOYED_NOT_READY
         updateControl = testController.reconcile(appCluster, context);
         assertTrue(updateControl.isUpdateStatus());
         assertEquals(
                 Optional.of(
                         TimeUnit.SECONDS.toMillis(
                                 operatorConfiguration.getRestApiReadyDelaySeconds())),
+                updateControl.getScheduleDelay());
+        // JM state: DEPLOYED_NOT_READY -> DEPLOYED_NOT_READY
+        flinkService.setJobManagerServing(false);
+        updateControl = testController.reconcile(appCluster, context);
+        assertTrue(updateControl.isUpdateStatus());
+        assertEquals(
+                Optional.of(
+                        TimeUnit.SECONDS.toMillis(
+                                operatorConfiguration.getRestApiReadyDelaySeconds())),
+                updateControl.getScheduleDelay());
+        // JM state: DEPLOYED_NOT_READY -> READY
+        flinkService.setJobManagerServing(true);
+        updateControl = testController.reconcile(appCluster, context);
+        assertTrue(updateControl.isUpdateStatus());
+        assertEquals(
+                Optional.of(
+                        TimeUnit.SECONDS.toMillis(
+                                operatorConfiguration.getReconcileIntervalSeconds())),
                 updateControl.getScheduleDelay());
 
         updateControl = testController.reconcile(appCluster, context);

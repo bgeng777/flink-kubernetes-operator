@@ -23,7 +23,6 @@ import org.apache.flink.kubernetes.operator.TestUtils;
 import org.apache.flink.kubernetes.operator.TestingFlinkService;
 import org.apache.flink.kubernetes.operator.config.FlinkOperatorConfiguration;
 import org.apache.flink.kubernetes.operator.crd.FlinkDeployment;
-import org.apache.flink.kubernetes.operator.service.FlinkService;
 import org.apache.flink.kubernetes.operator.utils.FlinkUtils;
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
@@ -37,7 +36,7 @@ public class SessionObserverTest {
 
     @Test
     public void observeSessionCluster() {
-        FlinkService flinkService = new TestingFlinkService();
+        TestingFlinkService flinkService = new TestingFlinkService();
         SessionObserver observer =
                 new SessionObserver(
                         flinkService,
@@ -48,22 +47,28 @@ public class SessionObserverTest {
                 .getReconciliationStatus()
                 .setLastReconciledSpec(deployment.getSpec());
 
+        assertTargetStatusObserved(
+                observer, deployment, JobManagerDeploymentStatus.DEPLOYED_NOT_READY);
+
+        assertTargetStatusObserved(observer, deployment, JobManagerDeploymentStatus.READY);
+
+        flinkService.setJobManagerServing(false);
+        assertTargetStatusObserved(
+                observer, deployment, JobManagerDeploymentStatus.DEPLOYED_NOT_READY);
+
+        flinkService.setJobManagerServing(true);
+        assertTargetStatusObserved(observer, deployment, JobManagerDeploymentStatus.READY);
+    }
+
+    private void assertTargetStatusObserved(
+            SessionObserver observer,
+            FlinkDeployment deployment,
+            JobManagerDeploymentStatus targetStatus) {
         observer.observe(
                 deployment,
                 readyContext,
                 FlinkUtils.getEffectiveConfig(deployment, new Configuration()));
 
-        assertEquals(
-                JobManagerDeploymentStatus.DEPLOYED_NOT_READY,
-                deployment.getStatus().getJobManagerDeploymentStatus());
-
-        observer.observe(
-                deployment,
-                readyContext,
-                FlinkUtils.getEffectiveConfig(deployment, new Configuration()));
-
-        assertEquals(
-                JobManagerDeploymentStatus.READY,
-                deployment.getStatus().getJobManagerDeploymentStatus());
+        assertEquals(targetStatus, deployment.getStatus().getJobManagerDeploymentStatus());
     }
 }

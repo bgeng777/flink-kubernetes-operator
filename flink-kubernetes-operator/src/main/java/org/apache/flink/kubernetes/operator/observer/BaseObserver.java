@@ -58,11 +58,21 @@ public abstract class BaseObserver implements Observer {
                 deploymentStatus.getJobManagerDeploymentStatus();
 
         if (JobManagerDeploymentStatus.READY == previousJmStatus) {
+            if (!flinkService.isJobManagerServing(effectiveConfig)) {
+                deploymentStatus.setJobManagerDeploymentStatus(
+                        JobManagerDeploymentStatus.DEPLOYED_NOT_READY);
+                logger.warn("The job manager is currently not ready for serving.");
+            }
             return;
         }
 
         if (JobManagerDeploymentStatus.DEPLOYED_NOT_READY == previousJmStatus) {
-            deploymentStatus.setJobManagerDeploymentStatus(JobManagerDeploymentStatus.READY);
+            // check if the JM is ready for accepting job submission
+            if (flinkService.isJobManagerServing(effectiveConfig)) {
+                deploymentStatus.setJobManagerDeploymentStatus(JobManagerDeploymentStatus.READY);
+            } else {
+                logger.info("The job manager has not been ready for serving yet...");
+            }
             return;
         }
 
