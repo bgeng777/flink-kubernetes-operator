@@ -33,7 +33,7 @@ jobs:
           distribution: 'adopt'
       - name: Build with Maven
         run: |
-          mvn clean install | tee ./mvn.log
+          mvn -ntp clean install | tee ./mvn.log
           if [[ $(grep -c "overlapping classes" ./mvn.log) -gt 0 ]];then
             echo "Found overlapping classes, please fix"
             exit 1
@@ -88,7 +88,7 @@ jobs:
           distribution: 'adopt'
       - name: Build with Maven
         run: |
-          mvn clean install | tee ./mvn.log
+          mvn -ntp clean install | tee ./mvn.log
           if [[ $(grep -c "overlapping classes" ./mvn.log) -gt 0 ]];then
             echo "Found overlapping classes, please fix"
             exit 1
