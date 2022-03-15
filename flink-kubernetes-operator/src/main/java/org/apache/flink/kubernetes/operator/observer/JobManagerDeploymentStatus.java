@@ -47,6 +47,7 @@ public enum JobManagerDeploymentStatus {
         int rescheduleAfterSec;
         switch (this) {
             case DEPLOYING:
+            case DEPLOYED_NOT_READY:
                 rescheduleAfterSec = operatorConfiguration.getProgressCheckIntervalSeconds();
                 break;
             case READY:
@@ -58,9 +59,6 @@ public enum JobManagerDeploymentStatus {
             case MISSING:
             case ERROR:
                 rescheduleAfterSec = operatorConfiguration.getReconcileIntervalSeconds();
-                break;
-            case DEPLOYED_NOT_READY:
-                rescheduleAfterSec = operatorConfiguration.getRestApiReadyDelaySeconds();
                 break;
             default:
                 throw new RuntimeException("Unknown status: " + this);

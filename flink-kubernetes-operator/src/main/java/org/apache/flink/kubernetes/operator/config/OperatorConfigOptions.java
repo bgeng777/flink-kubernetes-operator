@@ -31,13 +31,6 @@ public class OperatorConfigOptions {
                     .withDescription(
                             "The interval in second for the controller to reschedule the reconcile process");
 
-    public static final ConfigOption<Integer> OPERATOR_OBSERVER_REST_READY_DELAY_IN_SEC =
-            ConfigOptions.key("operator.observer.rest-ready.delay.sec")
-                    .intType()
-                    .defaultValue(10)
-                    .withDescription(
-                            "Final delay before deployment is marked ready after port becomes accessible.");
-
     public static final ConfigOption<Integer> OPERATOR_OBSERVER_PROGRESS_CHECK_INTERVAL_IN_SEC =
             ConfigOptions.key("operator.observer.progress-check.interval.sec")
                     .intType()

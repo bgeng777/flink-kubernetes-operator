@@ -66,7 +66,7 @@ public class FlinkDeploymentControllerTest {
 
     private final Context context = TestUtils.createContextWithReadyJobManagerDeployment();
     private final FlinkOperatorConfiguration operatorConfiguration =
-            new FlinkOperatorConfiguration(1, 2, 3, 4, null);
+            new FlinkOperatorConfiguration(1, 2, 3, null);
 
     private TestingFlinkService flinkService;
     private FlinkDeploymentController testController;
@@ -106,7 +106,7 @@ public class FlinkDeploymentControllerTest {
         assertEquals(
                 Optional.of(
                         TimeUnit.SECONDS.toMillis(
-                                operatorConfiguration.getRestApiReadyDelaySeconds())),
+                                operatorConfiguration.getProgressCheckIntervalSeconds())),
                 updateControl.getScheduleDelay());
         // JM state: DEPLOYED_NOT_READY -> DEPLOYED_NOT_READY
         flinkService.setJobManagerServing(false);
@@ -115,7 +115,7 @@ public class FlinkDeploymentControllerTest {
         assertEquals(
                 Optional.of(
                         TimeUnit.SECONDS.toMillis(
-                                operatorConfiguration.getRestApiReadyDelaySeconds())),
+                                operatorConfiguration.getProgressCheckIntervalSeconds())),
                 updateControl.getScheduleDelay());
         // JM state: DEPLOYED_NOT_READY -> READY
         flinkService.setJobManagerServing(true);

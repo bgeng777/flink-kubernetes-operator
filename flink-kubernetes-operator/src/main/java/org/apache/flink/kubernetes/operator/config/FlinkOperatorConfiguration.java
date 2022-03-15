@@ -29,7 +29,6 @@ public class FlinkOperatorConfiguration {
 
     int reconcileIntervalSeconds;
     int progressCheckIntervalSeconds;
-    int restApiReadyDelaySeconds;
     int savepointTriggerGracePeriodSeconds;
     String flinkServiceHostOverride;
 
@@ -37,10 +36,6 @@ public class FlinkOperatorConfiguration {
         int reconcileIntervalSeconds =
                 operatorConfig.getInteger(
                         OperatorConfigOptions.OPERATOR_RECONCILER_RESCHEDULE_INTERVAL_IN_SEC);
-
-        int restApiReadyDelaySeconds =
-                operatorConfig.getInteger(
-                        OperatorConfigOptions.OPERATOR_OBSERVER_REST_READY_DELAY_IN_SEC);
 
         int progressCheckIntervalSeconds =
                 operatorConfig.getInteger(
@@ -60,7 +55,6 @@ public class FlinkOperatorConfiguration {
         return new FlinkOperatorConfiguration(
                 reconcileIntervalSeconds,
                 progressCheckIntervalSeconds,
-                restApiReadyDelaySeconds,
                 savepointTriggerGracePeriodSeconds,
                 flinkServiceHostOverride);
     }
