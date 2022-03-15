@@ -38,7 +38,7 @@ public class FlinkOperatorConfiguration {
 
         int restApiReadyDelaySeconds =
                 operatorConfig.getInteger(
-                        OperatorConfigOptions.OPERATOR_OBSERVER_REST_READY_DELAY_IN_SEC);
+                        OperatorConfigOptions.OPERATOR_OBSERVER_PROGRESS_CHECK_INTERVAL_IN_SEC);
 
         int progressCheckIntervalSeconds =
                 operatorConfig.getInteger(
