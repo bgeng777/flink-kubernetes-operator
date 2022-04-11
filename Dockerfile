@@ -23,16 +23,19 @@ WORKDIR /app
 ENV SHADED_DIR=flink-kubernetes-shaded
 ENV OPERATOR_DIR=flink-kubernetes-operator
 ENV WEBHOOK_DIR=flink-kubernetes-webhook
+ENV SQL_RUNNER_DIR=flink-kubernetes-sql-runner
 
-RUN mkdir $OPERATOR_DIR $WEBHOOK_DIR
+RUN mkdir $OPERATOR_DIR $WEBHOOK_DIR $SQL_RUNNER_DIR
 
 COPY pom.xml .
 COPY $SHADED_DIR/pom.xml ./$SHADED_DIR/
 COPY $WEBHOOK_DIR/pom.xml ./$WEBHOOK_DIR/
+COPY $SQL_RUNNER_DIR/pom.xml ./$SQL_RUNNER_DIR/
 COPY $OPERATOR_DIR/pom.xml ./$OPERATOR_DIR/
 
 COPY $OPERATOR_DIR/src ./$OPERATOR_DIR/src
 COPY $WEBHOOK_DIR/src ./$WEBHOOK_DIR/src
+COPY $SQL_RUNNER_DIR/src ./$SQL_RUNNER_DIR/src
 
 COPY tools ./tools
 
@@ -44,6 +47,7 @@ ENV FLINK_HOME=/opt/flink
 ENV OPERATOR_VERSION=1.0-SNAPSHOT
 ENV OPERATOR_JAR=flink-kubernetes-operator-$OPERATOR_VERSION-shaded.jar
 ENV WEBHOOK_JAR=flink-kubernetes-webhook-$OPERATOR_VERSION.jar
+ENV SQL_RUNNER_DIR=flink-kubernetes-sql-runner-$OPERATOR_VERSION.jar
 ENV FLINK_KUBERNETES_SHADED_JAR=flink-kubernetes-shaded-$OPERATOR_VERSION.jar
 
 WORKDIR /
@@ -52,6 +56,7 @@ RUN groupadd --system --gid=9999 flink && \
 
 COPY --from=build /app/flink-kubernetes-operator/target/$OPERATOR_JAR .
 COPY --from=build /app/flink-kubernetes-webhook/target/$WEBHOOK_JAR .
+COPY --from=build /app/flink-kubernetes-sql-runner/target/$SQL_RUNNER_DIR .
 COPY --from=build /app/flink-kubernetes-shaded/target/$FLINK_KUBERNETES_SHADED_JAR .
 COPY --from=build /app/flink-kubernetes-operator/target/plugins $FLINK_HOME/plugins
 COPY docker-entrypoint.sh /
@@ -59,6 +64,7 @@ COPY docker-entrypoint.sh /
 RUN chown -R flink:flink $FLINK_HOME && \
     chown flink:flink $OPERATOR_JAR && \
     chown flink:flink $WEBHOOK_JAR && \
+    chown flink:flink $SQL_RUNNER_DIR && \
     chown flink:flink docker-entrypoint.sh
 
 USER flink
