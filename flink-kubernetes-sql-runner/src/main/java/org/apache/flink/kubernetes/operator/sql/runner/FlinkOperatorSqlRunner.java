@@ -21,6 +21,7 @@ import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.configuration.JobManagerOptions;
+import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.kubernetes.utils.Constants;
 import org.apache.flink.runtime.jobmanager.HighAvailabilityMode;
@@ -45,10 +46,12 @@ public class FlinkOperatorSqlRunner {
         final String[] sqlStatements =
                 Arrays.stream(args[0].split(";")).map(String::trim).toArray(String[]::new);
         final Configuration configuration = loadConfiguration(null);
+        LOG.info("Remove pipelien jar: {}.", configuration.get(PipelineOptions.JARS));
+        configuration.removeConfig(PipelineOptions.JARS);
         TableEnvironment tableEnvironment = TableEnvironment.create(configuration);
-        LOG.info("Start the execution of SQL statements.");
+        LOG.info("Start the execution of SQL statements with config: {}.", configuration);
         for (String statement : sqlStatements) {
-            LOG.debug("SQL statement to execute: {}", statement);
+            LOG.info("SQL statement to execute: {}", statement);
             tableEnvironment.executeSql(statement);
         }
         LOG.info("Finish the execution of SQL statements.");

@@ -20,7 +20,7 @@ apiVersion: flink.apache.org/v1alpha1
 kind: FlinkDeployment
 metadata:
   namespace: default
-  name: basic-sql-example
+  name: basic-sql-kafka-example
 spec:
   image: flink:1.14.4-scala_2.12-java11
   flinkVersion: v1_14
@@ -49,23 +49,33 @@ spec:
           volumeMounts:
             - mountPath: /opt/flink/artifact
               name: flink-artifact
+            - mountPath: /opt/flink/usrlib
+              name: flink-usrlib
       volumes:
         - name: flink-artifact
           emptyDir: { }
+        - name: flink-usrlib
+          emptyDir: { }
       initContainers:
+        # Sample sidecar container
         - name: artifacts-fetcher
           image: busybox:latest
           command: [ "/bin/sh","-c", "wget https://vvr-test.oss-cn-hangzhou.aliyuncs.com/flink-kubernetes-sql-runner-1.0-SNAPSHOT.jar -O /flink-artifact/flink-kubernetes-sql-runner-1.0-SNAPSHOT.jar && wget https://vvr-test.oss-cn-hangzhou.aliyuncs.com/sql_input.txt -O /flink-artifact/sql_input.txt"]
           volumeMounts:
             - mountPath: /flink-artifact
               name: flink-artifact
+        - name: usrlib-fetcher
+          image: busybox:latest
+          command: [ "/bin/sh","-c", "wget https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka_2.12/1.14.4/flink-sql-connector-kafka_2.12-1.14.4.jar -O /flink-usrlib/flink-sql-connector-kafka_2.12-1.14.4.jar" ]
+          volumeMounts:
+            - mountPath: /flink-usrlib
+              name: flink-usrlib
   job:
     jarURI: local:///opt/flink/artifact/flink-kubernetes-sql-runner-1.0-SNAPSHOT.jar
     parallelism: 2
     args:
-      - "CREATE TABLE orders (  user_id INT,  product STRING,  amount INT,  ts TIMESTAMP(3),  WATERMARK FOR ts AS ts - INTERVAL '3' SECOND) WITH (  'connector.type' = 'filesystem',  'connector.path' = 'file:///opt/flink/artifact/sql_input.txt',  'format.type' = 'csv');
-      CREATE TABLE default_catalog.default_database.datahole (window_start string, order_num BIGINT, total_amount int, unique_products BIGINT ) with ('connector' = 'blackhole');
-      INSERT INTO default_catalog.default_database.datahole SELECT CAST(TUMBLE_START(ts, INTERVAL '5' SECOND) AS STRING) window_start,  COUNT(*) order_num,  SUM(amount) total_amount,  COUNT(DISTINCT product) unique_products FROM orders GROUP BY TUMBLE(ts, INTERVAL '5' SECOND);"
+      - "CREATE TABLE kafkaSource (id STRING,price INTEGER,sell_time TIMESTAMP ) WITH ('connector' = 'kafka','format' = 'csv','topic' = 'transaction','scan.startup.mode' = 'earliest-offset','properties.group.id' = 'testGroup2','properties.bootstrap.servers' = '47.110.147.152:9093');
+      select * from kafkaSource;"
     entryClass: org.apache.flink.kubernetes.operator.sql.runner.FlinkOperatorSqlRunner
     upgradeMode: stateless
 #  SELECT word, SUM(frequency) AS `count` FROM (VALUES ('Hello', 1), ('Hello2', 1), ('Ciao', 1), ('Hello', 2)) AS WordTable(word, frequency) GROUP BY word;
