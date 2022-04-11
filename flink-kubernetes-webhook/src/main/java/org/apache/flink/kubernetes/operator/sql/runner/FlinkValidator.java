@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.admission;
+package org.apache.flink.kubernetes.operator.sql.runner;
 
-import org.apache.flink.kubernetes.operator.admission.admissioncontroller.NotAllowedException;
-import org.apache.flink.kubernetes.operator.admission.admissioncontroller.Operation;
-import org.apache.flink.kubernetes.operator.admission.admissioncontroller.validation.Validator;
 import org.apache.flink.kubernetes.operator.crd.FlinkDeployment;
+import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.NotAllowedException;
+import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.Operation;
+import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.validation.Validator;
 import org.apache.flink.kubernetes.operator.validation.FlinkResourceValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

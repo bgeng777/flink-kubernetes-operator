@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.admission;
+package org.apache.flink.kubernetes.operator.sql.runner;
 
 import org.apache.flink.kubernetes.operator.utils.EnvUtils;
 import org.apache.flink.kubernetes.operator.validation.DefaultValidator;

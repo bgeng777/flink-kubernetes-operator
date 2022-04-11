@@ -15,15 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.admission.admissioncontroller.validation;
+package org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller;
 
-import org.apache.flink.kubernetes.operator.admission.admissioncontroller.NotAllowedException;
-import org.apache.flink.kubernetes.operator.admission.admissioncontroller.Operation;
-
-import io.fabric8.kubernetes.api.model.KubernetesResource;
+import io.fabric8.kubernetes.api.model.admission.v1.AdmissionRequest;
+import io.fabric8.kubernetes.api.model.admission.v1.AdmissionResponse;
 
 /** Copied as is from https://github.com/java-operator-sdk/admission-controller-framework. */
-public interface Validator<T extends KubernetesResource> {
+public interface RequestHandler {
 
-    void validate(T resource, Operation operation) throws NotAllowedException;
+    AdmissionResponse handle(AdmissionRequest admissionRequest);
 }

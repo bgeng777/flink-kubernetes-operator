@@ -15,16 +15,15 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.admission.admissioncontroller.clone;
+package org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.mutation;
+
+import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.NotAllowedException;
+import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.Operation;
+
+import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 /** Copied as is from https://github.com/java-operator-sdk/admission-controller-framework. */
-public interface Cloner<R> {
+public interface Mutator<T extends KubernetesResource> {
 
-    /**
-     * Returns a deep copy of the given object if not {@code null} or {@code null} otherwise.
-     *
-     * @param object the object to be cloned
-     * @return a deep copy of the given object if it isn't {@code null}, {@code null} otherwise
-     */
-    R clone(R object);
+    T mutate(T resource, Operation operation) throws NotAllowedException;
 }

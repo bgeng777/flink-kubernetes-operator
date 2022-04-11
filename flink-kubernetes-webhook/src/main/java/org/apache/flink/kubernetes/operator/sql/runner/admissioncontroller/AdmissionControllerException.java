@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.admission.admissioncontroller;
+package org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller;
 
 /** Copied as is from https://github.com/java-operator-sdk/admission-controller-framework. */
 public class AdmissionControllerException extends RuntimeException {

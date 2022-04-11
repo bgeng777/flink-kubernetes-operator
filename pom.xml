@@ -54,6 +54,7 @@ under the License.
         <module>flink-kubernetes-shaded</module>
         <module>flink-kubernetes-operator</module>
         <module>flink-kubernetes-webhook</module>
+        <module>flink-kubernetes-sql-runner</module>
     </modules>
 
     <properties>

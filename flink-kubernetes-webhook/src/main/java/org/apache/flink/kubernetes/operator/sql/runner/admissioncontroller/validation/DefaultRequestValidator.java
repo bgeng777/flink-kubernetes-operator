@@ -15,18 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.admission.admissioncontroller.validation;
+package org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.validation;
 
-import org.apache.flink.kubernetes.operator.admission.admissioncontroller.AdmissionUtils;
-import org.apache.flink.kubernetes.operator.admission.admissioncontroller.NotAllowedException;
-import org.apache.flink.kubernetes.operator.admission.admissioncontroller.Operation;
-import org.apache.flink.kubernetes.operator.admission.admissioncontroller.RequestHandler;
+import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.AdmissionUtils;
+import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.NotAllowedException;
+import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.Operation;
+import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.RequestHandler;
 
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.admission.v1.AdmissionRequest;
 import io.fabric8.kubernetes.api.model.admission.v1.AdmissionResponse;
-
-import static org.apache.flink.kubernetes.operator.admission.admissioncontroller.AdmissionUtils.getTargetResource;
 
 /** Copied as is from https://github.com/java-operator-sdk/admission-controller-framework. */
 public class DefaultRequestValidator<T extends KubernetesResource> implements RequestHandler {
@@ -40,7 +38,7 @@ public class DefaultRequestValidator<T extends KubernetesResource> implements Re
     @Override
     public AdmissionResponse handle(AdmissionRequest admissionRequest) {
         Operation operation = Operation.valueOf(admissionRequest.getOperation());
-        T originalResource = (T) getTargetResource(admissionRequest, operation);
+        T originalResource = (T) AdmissionUtils.getTargetResource(admissionRequest, operation);
         AdmissionResponse admissionResponse;
         try {
             validator.validate(originalResource, operation);

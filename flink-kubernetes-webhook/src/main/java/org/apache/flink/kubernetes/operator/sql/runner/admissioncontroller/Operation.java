@@ -15,27 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.admission.admissioncontroller.clone;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+package org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller;
 
 /** Copied as is from https://github.com/java-operator-sdk/admission-controller-framework. */
-public class ObjectMapperCloner<T> implements Cloner<T> {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @Override
-    public T clone(T object) {
-        if (object == null) {
-            return null;
-        }
-        try {
-            return (T)
-                    objectMapper.readValue(
-                            objectMapper.writeValueAsString(object), object.getClass());
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
-        }
-    }
+public enum Operation {
+    CREATE,
+    UPDATE,
+    DELETE,
+    CONNECT
 }
