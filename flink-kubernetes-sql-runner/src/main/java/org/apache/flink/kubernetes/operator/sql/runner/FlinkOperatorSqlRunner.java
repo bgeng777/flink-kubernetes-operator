@@ -46,7 +46,7 @@ public class FlinkOperatorSqlRunner {
         final String[] sqlStatements =
                 Arrays.stream(args[0].split(";")).map(String::trim).toArray(String[]::new);
         final Configuration configuration = loadConfiguration(null);
-        LOG.info("Remove pipelien jar: {}.", configuration.get(PipelineOptions.JARS));
+        LOG.info("Remove pipeline jar: {}.", configuration.get(PipelineOptions.JARS));
         configuration.removeConfig(PipelineOptions.JARS);
         TableEnvironment tableEnvironment = TableEnvironment.create(configuration);
         LOG.info("Start the execution of SQL statements with config: {}.", configuration);
