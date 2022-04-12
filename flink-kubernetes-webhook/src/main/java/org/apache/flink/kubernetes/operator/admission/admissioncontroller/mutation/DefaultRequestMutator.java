@@ -15,18 +15,21 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.mutation;
+package org.apache.flink.kubernetes.operator.admission.admissioncontroller.mutation;
 
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.AdmissionUtils;
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.NotAllowedException;
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.Operation;
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.RequestHandler;
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.clone.Cloner;
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.clone.ObjectMapperCloner;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.AdmissionUtils;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.NotAllowedException;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.Operation;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.RequestHandler;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.clone.Cloner;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.clone.ObjectMapperCloner;
 
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.admission.v1.AdmissionRequest;
 import io.fabric8.kubernetes.api.model.admission.v1.AdmissionResponse;
+
+import static org.apache.flink.kubernetes.operator.admission.admissioncontroller.AdmissionUtils.admissionResponseFromMutation;
+import static org.apache.flink.kubernetes.operator.admission.admissioncontroller.AdmissionUtils.getTargetResource;
 
 /** Copied as is from https://github.com/java-operator-sdk/admission-controller-framework. */
 public class DefaultRequestMutator<T extends KubernetesResource> implements RequestHandler {
@@ -46,13 +49,12 @@ public class DefaultRequestMutator<T extends KubernetesResource> implements Requ
     @Override
     public AdmissionResponse handle(AdmissionRequest admissionRequest) {
         Operation operation = Operation.valueOf(admissionRequest.getOperation());
-        T originalResource = (T) AdmissionUtils.getTargetResource(admissionRequest, operation);
+        T originalResource = (T) getTargetResource(admissionRequest, operation);
         T clonedResource = cloner.clone(originalResource);
         AdmissionResponse admissionResponse;
         try {
             T mutatedResource = mutator.mutate(clonedResource, operation);
-            admissionResponse =
-                    AdmissionUtils.admissionResponseFromMutation(originalResource, mutatedResource);
+            admissionResponse = admissionResponseFromMutation(originalResource, mutatedResource);
         } catch (NotAllowedException e) {
             admissionResponse = AdmissionUtils.notAllowedExceptionToAdmissionResponse(e);
         }

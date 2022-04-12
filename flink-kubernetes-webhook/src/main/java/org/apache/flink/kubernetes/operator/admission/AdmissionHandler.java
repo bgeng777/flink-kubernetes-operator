@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.sql.runner;
+package org.apache.flink.kubernetes.operator.admission;
 
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.AdmissionController;
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.validation.Validator;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.AdmissionController;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.validation.Validator;
 
 import org.apache.flink.shaded.netty4.io.netty.buffer.ByteBuf;
 import org.apache.flink.shaded.netty4.io.netty.buffer.ByteBufInputStream;

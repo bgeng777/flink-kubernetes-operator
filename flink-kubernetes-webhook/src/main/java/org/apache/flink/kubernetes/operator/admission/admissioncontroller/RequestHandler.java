@@ -15,16 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.clone;
+package org.apache.flink.kubernetes.operator.admission.admissioncontroller;
+
+import io.fabric8.kubernetes.api.model.admission.v1.AdmissionRequest;
+import io.fabric8.kubernetes.api.model.admission.v1.AdmissionResponse;
 
 /** Copied as is from https://github.com/java-operator-sdk/admission-controller-framework. */
-public interface Cloner<R> {
+public interface RequestHandler {
 
-    /**
-     * Returns a deep copy of the given object if not {@code null} or {@code null} otherwise.
-     *
-     * @param object the object to be cloned
-     * @return a deep copy of the given object if it isn't {@code null}, {@code null} otherwise
-     */
-    R clone(R object);
+    AdmissionResponse handle(AdmissionRequest admissionRequest);
 }

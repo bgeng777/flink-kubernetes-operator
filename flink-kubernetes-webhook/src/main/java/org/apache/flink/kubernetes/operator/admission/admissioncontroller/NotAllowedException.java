@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller;
+package org.apache.flink.kubernetes.operator.admission.admissioncontroller;
 
 import io.fabric8.kubernetes.api.model.Status;
 

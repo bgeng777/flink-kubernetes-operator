@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller;
+package org.apache.flink.kubernetes.operator.admission.admissioncontroller;
 
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.mutation.DefaultRequestMutator;
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.mutation.Mutator;
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.validation.DefaultRequestValidator;
-import org.apache.flink.kubernetes.operator.sql.runner.admissioncontroller.validation.Validator;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.mutation.DefaultRequestMutator;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.mutation.Mutator;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.validation.DefaultRequestValidator;
+import org.apache.flink.kubernetes.operator.admission.admissioncontroller.validation.Validator;
 
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.admission.v1.AdmissionResponse;
