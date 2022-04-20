@@ -114,7 +114,6 @@ public class FlinkOperatorITCase {
         resource.setCpu(1);
         JobManagerSpec jm = new JobManagerSpec();
         jm.setResource(resource);
-        jm.setReplicas(1);
         spec.setJobManager(jm);
         TaskManagerSpec tm = new TaskManagerSpec();
         tm.setResource(resource);
